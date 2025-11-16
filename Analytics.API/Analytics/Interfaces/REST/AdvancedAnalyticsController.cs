@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using OsitoPolar.Analytics.Service.Domain.Model.Aggregates;
 using OsitoPolar.Analytics.Service.Domain.Repositories;
-using OsitoPolar.Analytics.Service.Interfaces.ACL;
-using OsitoPolar.Analytics.Service.Interfaces.ACL;
-using OsitoPolar.Analytics.Service.Domain.Model.Aggregates;
+using OsitoPolar.Analytics.Service.Shared.Interfaces.ACL;
 using OsitoPolar.Analytics.Service.Infrastructure.Pipeline.Middleware.Attributes;
 
 namespace OsitoPolar.Analytics.Service.Interfaces.REST;

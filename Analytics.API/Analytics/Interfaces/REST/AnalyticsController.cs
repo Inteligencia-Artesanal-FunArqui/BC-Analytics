@@ -6,9 +6,8 @@ using OsitoPolar.Analytics.Service.Domain.Services;
 using OsitoPolar.Analytics.Service.Interfaces.REST.Resources;
 using OsitoPolar.Analytics.Service.Interfaces.REST.Transform;
 using OsitoPolar.Analytics.Service.Domain.Model.Aggregates;
+using OsitoPolar.Analytics.Service.Shared.Interfaces.ACL;
 using OsitoPolar.Analytics.Service.Infrastructure.Pipeline.Middleware.Attributes;
-using OsitoPolar.Analytics.Service.Interfaces.ACL;
-using OsitoPolar.Analytics.Service.Interfaces.ACL;
 
 namespace OsitoPolar.Analytics.Service.Interfaces.REST;
 

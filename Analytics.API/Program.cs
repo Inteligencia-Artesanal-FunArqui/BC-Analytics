@@ -51,6 +51,48 @@ builder.Services.AddScoped<OsitoPolar.Analytics.Service.Shared.Domain.Repositori
 builder.Services.AddScoped<IAnalyticsCommandService, AnalyticsCommandService>();
 builder.Services.AddScoped<IAnalyticsQueryService, AnalyticsQueryService>();
 
+// ✅ PHASE 2: HTTP Facades for Microservices Communication
+// Analytics Service needs READ-ONLY access to other services for gathering metrics
+builder.Services.AddHttpClient<OsitoPolar.Analytics.Service.Shared.Interfaces.ACL.IProfilesContextFacade,
+    OsitoPolar.Analytics.Service.Application.ACL.Services.ProfilesHttpFacade>(client =>
+{
+    var profilesUrl = builder.Configuration["ServiceUrls:ProfilesService"]
+        ?? throw new InvalidOperationException("ProfilesService URL not configured");
+    client.BaseAddress = new Uri(profilesUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "Analytics-Service/1.0");
+});
+
+builder.Services.AddHttpClient<OsitoPolar.Analytics.Service.Shared.Interfaces.ACL.IEquipmentContextFacade,
+    OsitoPolar.Analytics.Service.Application.ACL.Services.EquipmentHttpFacade>(client =>
+{
+    var equipmentUrl = builder.Configuration["ServiceUrls:EquipmentService"]
+        ?? throw new InvalidOperationException("EquipmentService URL not configured");
+    client.BaseAddress = new Uri(equipmentUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "Analytics-Service/1.0");
+});
+
+builder.Services.AddHttpClient<OsitoPolar.Analytics.Service.Shared.Interfaces.ACL.IWorkOrdersContextFacade,
+    OsitoPolar.Analytics.Service.Application.ACL.Services.WorkOrdersHttpFacade>(client =>
+{
+    var workOrdersUrl = builder.Configuration["ServiceUrls:WorkOrdersService"]
+        ?? throw new InvalidOperationException("WorkOrdersService URL not configured");
+    client.BaseAddress = new Uri(workOrdersUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "Analytics-Service/1.0");
+});
+
+builder.Services.AddHttpClient<OsitoPolar.Analytics.Service.Shared.Interfaces.ACL.ISubscriptionsContextFacade,
+    OsitoPolar.Analytics.Service.Application.ACL.Services.SubscriptionsHttpFacade>(client =>
+{
+    var subscriptionsUrl = builder.Configuration["ServiceUrls:SubscriptionsService"]
+        ?? throw new InvalidOperationException("SubscriptionsService URL not configured");
+    client.BaseAddress = new Uri(subscriptionsUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);
+    client.DefaultRequestHeaders.Add("User-Agent", "Analytics-Service/1.0");
+});
+
 // Controllers
 builder.Services.AddControllers(options =>
 {
