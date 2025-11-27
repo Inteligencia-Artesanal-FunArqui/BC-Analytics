@@ -10,6 +10,9 @@ using OsitoPolar.Analytics.Service.Infrastructure.Persistence.EFC.Repositories;
 using OsitoPolar.Analytics.Service.Shared.Infrastructure.Persistence.EFC.Configuration.Extensions;
 using OsitoPolar.Analytics.Service.Shared.Infrastructure.Interfaces.ASP.Configuration;
 using OsitoPolar.Analytics.Service.Shared.Infrastructure.Interfaces.ASP.Configuration.Extensions;
+using OsitoPolar.Analytics.Service.Shared.Infrastructure.Tokens.JWT.Configuration;
+using OsitoPolar.Analytics.Service.Shared.Infrastructure.Tokens.JWT.Services;
+using OsitoPolar.Analytics.Service.Shared.Infrastructure.Pipeline.Middleware.Extensions;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -41,6 +44,10 @@ builder.Services.AddDbContext<AnalyticsDbContext>(options =>
 // ⚠️ CRÍTICO: Register DbContext as base class for UnitOfWork and BaseRepository
 // Sin esto, obtendrás error: "Unable to resolve service for type 'Microsoft.EntityFrameworkCore.DbContext'"
 builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<AnalyticsDbContext>());
+
+// JWT Token Configuration - Must use same secret as IAM Service
+builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 // Dependency Injection - Repositories
 builder.Services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
@@ -151,8 +158,8 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<AnalyticsDbContext>();
     try
     {
-        context.Database.CanConnect();
-        Console.WriteLine("✅ Database connection successful");
+        context.Database.EnsureCreated();
+        Console.WriteLine("✅ Database connection successful and schema ensured");
     }
     catch (Exception ex)
     {
@@ -168,6 +175,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAllPolicy");
+
+// JWT Authorization Middleware - validates tokens and sets HttpContext.Items["User"]
+app.UseRequestAuthorization();
 
 app.UseAuthorization();
 
