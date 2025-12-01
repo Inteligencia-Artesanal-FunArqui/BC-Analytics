@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using OsitoPolar.Analytics.Service.Domain.Model.Aggregates;
 using OsitoPolar.Analytics.Service.Domain.Repositories;
+using User = OsitoPolar.Analytics.Service.Shared.Domain.Model.User;
 using OsitoPolar.Analytics.Service.Shared.Interfaces.ACL;
 using OsitoPolar.Analytics.Service.Infrastructure.Pipeline.Middleware.Attributes;
 

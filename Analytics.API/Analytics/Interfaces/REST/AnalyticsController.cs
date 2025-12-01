@@ -7,6 +7,7 @@ using OsitoPolar.Analytics.Service.Interfaces.REST.Resources;
 using OsitoPolar.Analytics.Service.Interfaces.REST.Transform;
 using OsitoPolar.Analytics.Service.Domain.Model.Aggregates;
 using OsitoPolar.Analytics.Service.Shared.Interfaces.ACL;
+using User = OsitoPolar.Analytics.Service.Shared.Domain.Model.User;
 using OsitoPolar.Analytics.Service.Infrastructure.Pipeline.Middleware.Attributes;
 
 namespace OsitoPolar.Analytics.Service.Interfaces.REST;
