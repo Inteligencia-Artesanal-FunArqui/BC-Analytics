@@ -196,7 +196,7 @@ public class EquipmentHttpFacade : IEquipmentContextFacade
         {
             _logger.LogInformation("Checking if equipment {EquipmentId} exists in Equipment Service", equipmentId);
 
-            var response = await _httpClient.GetAsync($"/api/v1/equipment/{equipmentId}/exists");
+            var response = await _httpClient.GetAsync($"/api/v1/equipment/exists/{equipmentId}");
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
@@ -225,7 +225,7 @@ public class EquipmentHttpFacade : IEquipmentContextFacade
         {
             _logger.LogInformation("Checking if equipment {EquipmentId} is owned by owner {OwnerId} in Equipment Service", equipmentId, ownerId);
 
-            var response = await _httpClient.GetAsync($"/api/v1/equipment/{equipmentId}/is-owned-by/{ownerId}");
+            var response = await _httpClient.GetAsync($"/api/v1/equipment/is-owned-by/{equipmentId}/{ownerId}");
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
