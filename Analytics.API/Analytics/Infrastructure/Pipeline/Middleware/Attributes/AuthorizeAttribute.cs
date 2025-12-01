@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using OsitoPolar.Analytics.Service.Domain.Model.Aggregates;
+using OsitoPolar.Analytics.Service.Shared.Domain.Model;
 
 namespace OsitoPolar.Analytics.Service.Infrastructure.Pipeline.Middleware.Attributes;
 
