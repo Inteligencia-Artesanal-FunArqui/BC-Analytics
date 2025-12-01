@@ -35,29 +35,41 @@ public class AdvancedAnalyticsController : ControllerBase
     }
 
     /// <summary>
-    /// Helper method to verify equipment ownership
+    /// Helper method to verify equipment ownership (supports both Owner and Provider)
     /// </summary>
-    private async Task<(ActionResult? error, int ownerId)> VerifyOwnership(int equipmentId)
+    private async Task<(ActionResult? error, int profileId, string profileType)> VerifyOwnership(int equipmentId)
     {
         var user = (User?)HttpContext.Items["User"];
         if (user == null)
-            return (Unauthorized(new { message = "User not authenticated" }), 0);
+            return (Unauthorized(new { message = "User not authenticated" }), 0, "");
 
+        // Try to get Owner ID first
         var ownerId = await _profilesFacade.FetchOwnerIdByUserId(user.Id);
+        var providerId = 0;
+        var profileType = "Owner";
+
         if (ownerId == 0)
-            return (StatusCode(StatusCodes.Status403Forbidden,
-                new { message = "Only owners can view analytics" }), 0);
+        {
+            // If not an Owner, try Provider
+            providerId = await _profilesFacade.FetchProviderIdByUserId(user.Id);
+            if (providerId == 0)
+                return (StatusCode(StatusCodes.Status403Forbidden,
+                    new { message = "User profile not found. Only owners or providers can view analytics." }), 0, "");
+            profileType = "Provider";
+        }
+
+        var profileId = ownerId > 0 ? ownerId : providerId;
 
         var equipmentExists = await _equipmentFacade.EquipmentExists(equipmentId);
         if (!equipmentExists)
-            return (NotFound(new { message = "Equipment not found" }), 0);
+            return (NotFound(new { message = "Equipment not found" }), 0, "");
 
-        var isOwnedByUser = await _equipmentFacade.IsEquipmentOwnedBy(equipmentId, ownerId);
+        var isOwnedByUser = await _equipmentFacade.IsEquipmentOwnedBy(equipmentId, profileId);
         if (!isOwnedByUser)
             return (StatusCode(StatusCodes.Status403Forbidden,
-                new { message = "You don't have permission to view this equipment's analytics" }), 0);
+                new { message = "You don't have permission to view this equipment's analytics" }), 0, "");
 
-        return (null, equipmentId);
+        return (null, profileId, profileType);
     }
 
     /// <summary>
@@ -75,7 +87,7 @@ public class AdvancedAnalyticsController : ControllerBase
         int equipmentId,
         [FromQuery] int days = 7)
     {
-        var (error, _) = await VerifyOwnership(equipmentId);
+        var (error, _, _) = await VerifyOwnership(equipmentId);
         if (error != null) return error;
 
         try
@@ -114,7 +126,7 @@ public class AdvancedAnalyticsController : ControllerBase
         int equipmentId,
         [FromQuery] int hours = 24)
     {
-        var (error, _) = await VerifyOwnership(equipmentId);
+        var (error, _, _) = await VerifyOwnership(equipmentId);
         if (error != null) return error;
 
         try
@@ -154,7 +166,7 @@ public class AdvancedAnalyticsController : ControllerBase
         [FromQuery] int days = 30,
         [FromQuery] decimal rate = 0.12m)
     {
-        var (error, _) = await VerifyOwnership(equipmentId);
+        var (error, _, _) = await VerifyOwnership(equipmentId);
         if (error != null) return error;
 
         try
@@ -203,7 +215,7 @@ public class AdvancedAnalyticsController : ControllerBase
         int equipmentId,
         [FromQuery] int days = 30)
     {
-        var (error, _) = await VerifyOwnership(equipmentId);
+        var (error, _, _) = await VerifyOwnership(equipmentId);
         if (error != null) return error;
 
         try

@@ -230,6 +230,37 @@ public class ProfilesHttpFacade : IProfilesContextFacade
             return 0;
         }
     }
+
+    public async Task<int> FetchProviderIdByUserId(int userId)
+    {
+        try
+        {
+            _logger.LogInformation("Fetching Provider ID for user {UserId} from Profiles Service", userId);
+
+            var response = await _httpClient.GetAsync($"/api/v1/profiles/providers/by-user/{userId}");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("No Provider profile found for user {UserId}", userId);
+                return 0;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to fetch Provider ID for user {UserId}: {StatusCode}", userId, response.StatusCode);
+                return 0;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<RenterProviderResponse>();
+
+            return result?.Id ?? 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while fetching Provider ID for user {UserId}", userId);
+            return 0;
+        }
+    }
 }
 
 // Response DTOs for HTTP communication

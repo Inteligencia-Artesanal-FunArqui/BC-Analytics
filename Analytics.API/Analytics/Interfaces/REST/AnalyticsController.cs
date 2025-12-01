@@ -38,21 +38,27 @@ public class AnalyticsController : ControllerBase
     }
 
     /// <summary>
-    /// Helper method to get the authenticated owner ID
+    /// Helper method to get the authenticated profile ID (Owner or Provider)
     /// </summary>
-    /// <returns>The owner ID or error result</returns>
-    private async Task<(ActionResult? error, int ownerId)> GetAuthenticatedOwnerId()
+    /// <returns>The profile ID or error result</returns>
+    private async Task<(ActionResult? error, int profileId)> GetAuthenticatedProfileId()
     {
         var user = (User?)HttpContext.Items["User"];
         if (user == null)
             return (Unauthorized(new { message = "User not authenticated" }), 0);
 
+        // Try to get Owner ID first
         var ownerId = await _profilesFacade.FetchOwnerIdByUserId(user.Id);
-        if (ownerId == 0)
-            return (StatusCode(StatusCodes.Status403Forbidden,
-                new { message = "User is not an owner. Only owners can view analytics." }), 0);
+        if (ownerId > 0)
+            return (null, ownerId);
 
-        return (null, ownerId);
+        // If not an Owner, try Provider
+        var providerId = await _profilesFacade.FetchProviderIdByUserId(user.Id);
+        if (providerId > 0)
+            return (null, providerId);
+
+        return (StatusCode(StatusCodes.Status403Forbidden,
+            new { message = "User profile not found. Only owners or providers can view analytics." }), 0);
     }
 
     /// <summary>
@@ -79,7 +85,7 @@ public class AnalyticsController : ControllerBase
         [FromQuery] int limit = 100)
     {
         // Get authenticated owner ID
-        var (error, ownerId) = await GetAuthenticatedOwnerId();
+        var (error, profileId) = await GetAuthenticatedProfileId();
         if (error != null) return error;
 
         // Verify equipment ownership using Facade
@@ -87,7 +93,7 @@ public class AnalyticsController : ControllerBase
         if (!equipmentExists)
             return NotFound(new { message = "Equipment not found" });
 
-        var isOwnedByUser = await _equipmentFacade.IsEquipmentOwnedBy(equipmentId, ownerId);
+        var isOwnedByUser = await _equipmentFacade.IsEquipmentOwnedBy(equipmentId, profileId);
         if (!isOwnedByUser)
             return StatusCode(StatusCodes.Status403Forbidden,
                 new { message = "You don't have permission to view analytics for this equipment" });
@@ -171,7 +177,7 @@ public class AnalyticsController : ControllerBase
         [FromQuery] int days = 7)
     {
         // Get authenticated owner ID
-        var (error, ownerId) = await GetAuthenticatedOwnerId();
+        var (error, profileId) = await GetAuthenticatedProfileId();
         if (error != null) return error;
 
         // Verify equipment ownership using Facade
@@ -179,7 +185,7 @@ public class AnalyticsController : ControllerBase
         if (!equipmentExists)
             return NotFound(new { message = "Equipment not found" });
 
-        var isOwnedByUser = await _equipmentFacade.IsEquipmentOwnedBy(equipmentId, ownerId);
+        var isOwnedByUser = await _equipmentFacade.IsEquipmentOwnedBy(equipmentId, profileId);
         if (!isOwnedByUser)
             return StatusCode(StatusCodes.Status403Forbidden,
                 new { message = "You don't have permission to view analytics for this equipment" });
@@ -241,19 +247,19 @@ public class AnalyticsController : ControllerBase
         [FromQuery] string type = "current")
     {
         // Get authenticated owner ID
-        var (error, ownerId) = await GetAuthenticatedOwnerId();
+        var (error, profileId) = await GetAuthenticatedProfileId();
         if (error != null) return error;
 
         try
         {
-            // Get owner's equipment IDs
-            var ownerEquipmentIds = (await _equipmentFacade.FetchEquipmentIdsByOwnerId(ownerId)).ToHashSet();
+            // Get user's equipment IDs (works for both owners and providers)
+            var userEquipmentIds = (await _equipmentFacade.FetchEquipmentIdsByOwnerId(profileId)).ToHashSet();
 
             List<int> equipmentIds;
             if (string.IsNullOrWhiteSpace(ids))
             {
                 // If no IDs provided, use all owner's equipment
-                equipmentIds = ownerEquipmentIds.ToList();
+                equipmentIds = userEquipmentIds.ToList();
             }
             else
             {
@@ -263,7 +269,7 @@ public class AnalyticsController : ControllerBase
                                  .ToList();
 
                 // Verify all requested equipment belongs to the owner
-                var unauthorizedIds = equipmentIds.Where(id => !ownerEquipmentIds.Contains(id)).ToList();
+                var unauthorizedIds = equipmentIds.Where(id => !userEquipmentIds.Contains(id)).ToList();
                 if (unauthorizedIds.Any())
                     return StatusCode(StatusCodes.Status403Forbidden,
                         new { message = $"You don't have permission to view analytics for equipment IDs: {string.Join(", ", unauthorizedIds)}" });

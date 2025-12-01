@@ -50,6 +50,13 @@ public interface IProfilesContextFacade
     /// <param name="userId">User ID from authentication</param>
     /// <returns>Owner ID if found, 0 otherwise</returns>
     Task<int> FetchOwnerIdByUserId(int userId);
+
+    /// <summary>
+    /// Fetch Provider ID by User ID (used by controllers for authentication)
+    /// </summary>
+    /// <param name="userId">User ID from authentication</param>
+    /// <returns>Provider ID if found, 0 otherwise</returns>
+    Task<int> FetchProviderIdByUserId(int userId);
 }
 
 /// <summary>
